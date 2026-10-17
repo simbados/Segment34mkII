@@ -11,6 +11,11 @@ class SettingsMenu extends WatchUi.Menu2 {
         var items = SettingsMenuData.items();
         for (var i = 0; i < items.size(); i++) {
             var key = items[i][0] as String;
+            if (items[i][2] == null) {
+                addItem(new WatchUi.ToggleMenuItem(items[i][1] as String, {:enabled => "On", :disabled => "Off"},
+                    i, Application.Properties.getValue(key) == true, {}));
+                continue;
+            }
             var options = WatchUi.loadResource(items[i][2] as ResourceId) as Array<Array>;
             addItem(new WatchUi.MenuItem(items[i][1] as String,
                 SettingsMenuOptions.labelFor(options, Application.Properties.getValue(key) as Number), i, {}));
@@ -26,6 +31,11 @@ class SettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
     function onSelect(item as WatchUi.MenuItem) as Void {
         var entry = SettingsMenuData.items()[item.getId() as Number];
         var key = entry[0] as String;
+        if (entry[2] == null) {
+            Application.Properties.setValue(key, (item as WatchUi.ToggleMenuItem).isEnabled());
+            getApp().onSettingsChanged();
+            return;
+        }
         var options = WatchUi.loadResource(entry[2] as ResourceId) as Array<Array>;
         var current = Application.Properties.getValue(key) as Number;
 

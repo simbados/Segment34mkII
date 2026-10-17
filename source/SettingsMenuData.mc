@@ -2,7 +2,7 @@
 import Toybox.Lang;
 
 module SettingsMenuData {
-    // [property key, title, option list resource]
+    // [property key, title, option list resource, or null for an on/off setting]
     function items() as Array<Array> {
         return [
             ["colorTheme", "Color Theme", Rez.JsonData.menu_t0],
@@ -12,6 +12,7 @@ module SettingsMenuData {
             ["weatherLine2Shows", "Line 2 above clock shows", Rez.JsonData.menu_t4],
             ["dateFieldShows", "Line below clock shows", Rez.JsonData.menu_t5],
             ["notificationCountShows", "Number left of seconds shows", Rez.JsonData.menu_t6],
+            ["showSeconds", "Show Seconds in Active mode", null],
             ["leftValueShows", "Bottom value 1 (left)", Rez.JsonData.menu_t7],
             ["middleValueShows", "Bottom value 2", Rez.JsonData.menu_t7],
             ["rightValueShows", "Bottom value 3", Rez.JsonData.menu_t7],
