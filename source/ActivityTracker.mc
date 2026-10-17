@@ -12,15 +12,20 @@ import Toybox.Time;
 // lastMove is the time of the last movement (the step count rose by at least the
 // movement threshold since the previous movement), so a few fidgeting steps do not
 // count. A walk starts at the first movement after a pause of ACTIVE_GAP_SEC and ends
-// at its last movement, so both durations are backdated.
+// at its last movement, so both durations are backdated. If the face was not sampled for
+// a while (wrist down, low power) but the steps since the last sample show a walking rate
+// of at least WALK_STEPS_PER_MIN, the walk is considered continuous.
 //
 // Example (threshold 10, gap 2 min), sampled each minute:
 //   10:00 1200 (start)  10:20 1205  -> inactive 20, active 0
 //   10:21 1260 (walk starts)  10:26 1700 (last steps)  -> inactive 0, active 5
 //   10:30 1702 (sitting again) -> inactive 4, active 5 (last walk)
+// Sampling gap: 10:12 2100 (walking), no sample until 10:15 2400: gap 180 s, 300 steps
+//   = 100/min >= WALK_STEPS_PER_MIN, so the walk that began 10:01 continues.
 (:background)
 module ActivityTracker {
     const ACTIVE_GAP_SEC = 120;
+    const WALK_STEPS_PER_MIN = 40;  // average rate over a sampling gap that still means walking
     const MIN_EVENT_GAP_SEC = 300;  // Garmin: background events at least 5 minutes apart
     const QUIET_FROM_HOUR = 22;     // no reminders from 22:00 ...
     const QUIET_TO_HOUR = 7;        // ... until 07:00
@@ -73,7 +78,9 @@ module ActivityTracker {
         } else if(steps < baseSteps) { // step counter reset at midnight
             baseSteps = steps;
         } else if(steps - baseSteps >= threshold()) {
-            if(now - lastMove >= ACTIVE_GAP_SEC) { activeStart = now; } // a new walk begins
+            var gap = now - lastMove;
+            // a new walk begins, unless the steps show we were walking during the gap
+            if(gap >= ACTIVE_GAP_SEC && (steps - baseSteps) * 60 < WALK_STEPS_PER_MIN * gap) { activeStart = now; }
             baseSteps = steps;
             lastMove = now;
         } else {
