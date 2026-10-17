@@ -147,10 +147,12 @@ class Segment34View extends WatchUi.WatchFace {
     hidden var propWeatherLine1Shows as Number = 49;
     hidden var propWeatherLine2Shows as Number = 50;
     hidden var propAboveClockLines as Number = 1;
-    // Inactivity tracking for data type 79 (see getInactiveMinutes)
+    // Activity tracking for data types 79 and 80 (see updateActivityState)
     const INACTIVE_STEP_THRESHOLD = 10;
+    const ACTIVE_GAP_SEC = 120;
     hidden var inactiveBaseSteps as Number = -1;
     hidden var inactiveSince as Number = 0;
+    hidden var activeStart as Number = 0;
     hidden var propDateFormat as Number = 0;
     hidden var propNotificationCountShows as Number = 36;
     hidden var propTzOffset1 as Number = 0;
@@ -2470,31 +2472,53 @@ class Segment34View extends WatchUi.WatchFace {
             var distFactor = propIsMetricDistance ? 0.001 : 0.000621371;
             val = formatDistanceByWidth((complicationType == 77 ? cachedRunDist7Days : cachedBikeDist7Days) * distFactor, width);
         } else if(complicationType == 79) { // Inactive minutes
+            updateActivityState();
             val = getInactiveMinutes().format(numberFormat);
+        } else if(complicationType == 80) { // Inactive / active minutes
+            updateActivityState();
+            val = getInactiveMinutes().format(numberFormat) + "/" + getActiveMinutes().format(numberFormat);
         }
 
         return val;
     }
 
-    // Minutes since the step count last rose by at least INACTIVE_STEP_THRESHOLD, so a
-    // few fidgeting steps do not count as moving. Starts at 0 when the face is loaded.
+    // Tracks sitting and walking from the step count. inactiveSince is the time of the
+    // last movement (the step count rose by at least INACTIVE_STEP_THRESHOLD since the
+    // previous movement), so a few fidgeting steps do not count. A walk starts at the first
+    // movement after a pause of ACTIVE_GAP_SEC or more and ends at its last movement, so
+    // both durations are backdated and accurate to the sampling interval (about a minute).
+    // State starts fresh when the face is loaded.
     //
-    // Example (threshold 10): 1200 steps at 10:00, 1205 at 10:20 -> 20 min;
-    //                         1215 at 10:25 -> 0 min (reset, baseline now 1215)
-    hidden function getInactiveMinutes() as Number {
+    // Example (threshold 10, gap 2 min), steps sampled each minute:
+    //   10:00 1200 (start)  10:20 1205  -> inactive 20, active 0
+    //   10:21 1260 (walk starts)  10:26 1700 (last steps)  -> inactive 0, active 5
+    //   10:30 1702 (sitting again) -> inactive 4, active 5 (last walk)
+    hidden function updateActivityState() as Void {
         var steps = ActivityMonitor.getInfo().steps;
         var now = Time.now().value();
-        if(steps == null) { return 0; }
+        if(steps == null) { return; }
         if(inactiveBaseSteps < 0) { // first call
             inactiveBaseSteps = steps;
             inactiveSince = now;
+            activeStart = now;
         } else if(steps < inactiveBaseSteps) { // step counter reset at midnight
             inactiveBaseSteps = steps;
         } else if(steps - inactiveBaseSteps >= INACTIVE_STEP_THRESHOLD) {
+            if(now - inactiveSince >= ACTIVE_GAP_SEC) { activeStart = now; } // a new walk begins
             inactiveBaseSteps = steps;
             inactiveSince = now;
         }
-        return (now - inactiveSince) / 60;
+    }
+
+    hidden function getInactiveMinutes() as Number {
+        return (Time.now().value() - inactiveSince) / 60;
+    }
+
+    // Duration of the current walk, or of the last one while sitting.
+    hidden function getActiveMinutes() as Number {
+        var now = Time.now().value();
+        var end = (now - inactiveSince < ACTIVE_GAP_SEC) ? now : inactiveSince;
+        return (end - activeStart) / 60;
     }
 
     hidden function getDataArrayByType(dataSource as Number) as Array<Number> {
@@ -2645,6 +2669,7 @@ class Segment34View extends WatchUi.WatchFace {
             case 75: return formatLabel(Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_3, labelSize);
             case 76: return formatLabel(Rez.Strings.LABEL_RHR_1, Rez.Strings.LABEL_RHR_2, Rez.Strings.LABEL_RHR_3, labelSize);
             case 79: return formatLabel(Rez.Strings.LABEL_INACT_1, Rez.Strings.LABEL_INACT_2, Rez.Strings.LABEL_INACT_3, labelSize);
+            case 80: return formatLabel(Rez.Strings.LABEL_INACTACT_1, Rez.Strings.LABEL_INACTACT_2, Rez.Strings.LABEL_INACTACT_3, labelSize);
         }
         return "";
     }
@@ -2722,6 +2747,7 @@ class Segment34View extends WatchUi.WatchFace {
             case 75: return formatLabel(Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, labelSize);
             case 76: return formatLabel(Rez.Strings.LABEL_RHR_1, Rez.Strings.LABEL_RHR_2, labelSize);
             case 79: return formatLabel(Rez.Strings.LABEL_INACT_1, Rez.Strings.LABEL_INACT_2, labelSize);
+            case 80: return formatLabel(Rez.Strings.LABEL_INACTACT_1, Rez.Strings.LABEL_INACTACT_2, labelSize);
         }
         return "";
     }
