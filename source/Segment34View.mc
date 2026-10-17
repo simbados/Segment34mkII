@@ -147,12 +147,6 @@ class Segment34View extends WatchUi.WatchFace {
     hidden var propWeatherLine1Shows as Number = 49;
     hidden var propWeatherLine2Shows as Number = 50;
     hidden var propAboveClockLines as Number = 1;
-    // Activity tracking for data types 79 and 80 (see updateActivityState)
-    const INACTIVE_STEP_THRESHOLD = 10;
-    const ACTIVE_GAP_SEC = 120;
-    hidden var inactiveBaseSteps as Number = -1;
-    hidden var inactiveSince as Number = 0;
-    hidden var activeStart as Number = 0;
     hidden var propDateFormat as Number = 0;
     hidden var propNotificationCountShows as Number = 36;
     hidden var propTzOffset1 as Number = 0;
@@ -686,6 +680,10 @@ class Segment34View extends WatchUi.WatchFace {
     // This includes loading resources into memory.
     function onShow() as Void {
         visible = true;
+        // Pick up what the reminder service saw while the face was not shown
+        ActivityTracker.reload();
+        ActivityTracker.update();
+        ActivityTracker.scheduleReminder();
         lastUpdate = null;
         lastSlowUpdate = null;
     }
@@ -706,6 +704,8 @@ class Segment34View extends WatchUi.WatchFace {
             lastSlowUpdate = unix_timestamp;
             updateColorTheme();
             updateWeather();
+            // Sample steps once a minute; a movement moves the stand-up reminder later
+            if(ActivityTracker.update()) { ActivityTracker.scheduleReminder(); }
         }
 
         if(lastUpdate == null or unix_timestamp - lastUpdate >= propUpdateFreq) {
@@ -2472,53 +2472,12 @@ class Segment34View extends WatchUi.WatchFace {
             var distFactor = propIsMetricDistance ? 0.001 : 0.000621371;
             val = formatDistanceByWidth((complicationType == 77 ? cachedRunDist7Days : cachedBikeDist7Days) * distFactor, width);
         } else if(complicationType == 79) { // Inactive minutes
-            updateActivityState();
-            val = getInactiveMinutes().format(numberFormat);
+            val = ActivityTracker.inactiveMinutes().format(numberFormat);
         } else if(complicationType == 80) { // Inactive / active minutes
-            updateActivityState();
-            val = getInactiveMinutes().format(numberFormat) + "/" + getActiveMinutes().format(numberFormat);
+            val = ActivityTracker.inactiveMinutes().format(numberFormat) + "/" + ActivityTracker.activeMinutes().format(numberFormat);
         }
 
         return val;
-    }
-
-    // Tracks sitting and walking from the step count. inactiveSince is the time of the
-    // last movement (the step count rose by at least INACTIVE_STEP_THRESHOLD since the
-    // previous movement), so a few fidgeting steps do not count. A walk starts at the first
-    // movement after a pause of ACTIVE_GAP_SEC or more and ends at its last movement, so
-    // both durations are backdated and accurate to the sampling interval (about a minute).
-    // State starts fresh when the face is loaded.
-    //
-    // Example (threshold 10, gap 2 min), steps sampled each minute:
-    //   10:00 1200 (start)  10:20 1205  -> inactive 20, active 0
-    //   10:21 1260 (walk starts)  10:26 1700 (last steps)  -> inactive 0, active 5
-    //   10:30 1702 (sitting again) -> inactive 4, active 5 (last walk)
-    hidden function updateActivityState() as Void {
-        var steps = ActivityMonitor.getInfo().steps;
-        var now = Time.now().value();
-        if(steps == null) { return; }
-        if(inactiveBaseSteps < 0) { // first call
-            inactiveBaseSteps = steps;
-            inactiveSince = now;
-            activeStart = now;
-        } else if(steps < inactiveBaseSteps) { // step counter reset at midnight
-            inactiveBaseSteps = steps;
-        } else if(steps - inactiveBaseSteps >= INACTIVE_STEP_THRESHOLD) {
-            if(now - inactiveSince >= ACTIVE_GAP_SEC) { activeStart = now; } // a new walk begins
-            inactiveBaseSteps = steps;
-            inactiveSince = now;
-        }
-    }
-
-    hidden function getInactiveMinutes() as Number {
-        return (Time.now().value() - inactiveSince) / 60;
-    }
-
-    // Duration of the current walk, or of the last one while sitting.
-    hidden function getActiveMinutes() as Number {
-        var now = Time.now().value();
-        var end = (now - inactiveSince < ACTIVE_GAP_SEC) ? now : inactiveSince;
-        return (end - activeStart) / 60;
     }
 
     hidden function getDataArrayByType(dataSource as Number) as Array<Number> {

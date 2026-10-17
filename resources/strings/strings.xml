@@ -301,6 +301,10 @@
     <string id="settings_inactive_minutes" scope="settings">Inactive minutes (since last steps)</string>
     <string id="settings_inactive_active_minutes" scope="settings">Inactive / active minutes (current or last walk)</string>
     <string id="settings_above_clock_lines" scope="settings">Lines above clock</string>
+    <string id="settings_reminders" scope="settings">Stand-up reminders</string>
+    <string id="settings_remind_window" scope="settings">Remind after inactive</string>
+    <string id="settings_remind_repeat" scope="settings">Repeat reminder every</string>
+    <string id="settings_move_threshold" scope="settings">Steps that count as moving</string>
     <string id="settings_two_small_lines" scope="settings">Two small lines</string>
     <string id="settings_one_large_line" scope="settings">One large line (shows line 1)</string>
     <string id="settings_alternative_timezone_1" scope="settings">Alternative Timezone 1</string>

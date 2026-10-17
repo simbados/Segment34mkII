@@ -256,6 +256,43 @@
             </settingConfig>
     </setting>
 
+    <setting propertyKey="@Properties.remindersEnabled" title="@Strings.settings_reminders">
+        <settingConfig type="boolean" />
+    </setting>
+
+    <setting propertyKey="@Properties.remindWindowMin" title="@Strings.settings_remind_window">
+        <settingConfig type="list">
+            <listEntry value="5">5 min</listEntry>
+            <listEntry value="10">10 min</listEntry>
+            <listEntry value="15">15 min</listEntry>
+            <listEntry value="20">20 min</listEntry>
+            <listEntry value="25">25 min</listEntry>
+            <listEntry value="30">30 min</listEntry>
+            <listEntry value="35">35 min</listEntry>
+            <listEntry value="40">40 min</listEntry>
+            <listEntry value="45">45 min</listEntry>
+            <listEntry value="60">60 min</listEntry>
+        </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.remindRepeatMin" title="@Strings.settings_remind_repeat">
+        <settingConfig type="list">
+            <listEntry value="5">5 min</listEntry>
+            <listEntry value="10">10 min</listEntry>
+            <listEntry value="15">15 min</listEntry>
+            <listEntry value="30">30 min</listEntry>
+        </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.moveThreshold" title="@Strings.settings_move_threshold">
+        <settingConfig type="list">
+            <listEntry value="5">5 steps</listEntry>
+            <listEntry value="10">10 steps</listEntry>
+            <listEntry value="20">20 steps</listEntry>
+            <listEntry value="50">50 steps</listEntry>
+        </settingConfig>
+    </setting>
+
     <setting propertyKey="@Properties.aboveClockLines" title="@Strings.settings_above_clock_lines">
         <settingConfig type="list">
             <listEntry value="0">@Strings.settings_two_small_lines</listEntry>

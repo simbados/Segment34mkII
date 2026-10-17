@@ -26,6 +26,7 @@ MENU = [
     "leftBarShows", "rightBarShows",
     "sunriseFieldShows", "sunsetFieldShows",
     "aodFieldShows",
+    "remindersEnabled", "remindWindowMin", "remindRepeatMin", "moveThreshold",
 ]
 
 root = Path(__file__).resolve().parent.parent

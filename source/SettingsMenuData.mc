@@ -22,7 +22,11 @@ module SettingsMenuData {
             ["rightBarShows", "Right Bar Shows", Rez.JsonData.menu_t9],
             ["sunriseFieldShows", "Top left small data field", Rez.JsonData.menu_t10],
             ["sunsetFieldShows", "Top right small data field", Rez.JsonData.menu_t10],
-            ["aodFieldShows", "Always On (below clock)", Rez.JsonData.menu_t11]
+            ["aodFieldShows", "Always On (below clock)", Rez.JsonData.menu_t11],
+            ["remindersEnabled", "Stand-up reminders", null],
+            ["remindWindowMin", "Remind after inactive", Rez.JsonData.menu_t12],
+            ["remindRepeatMin", "Repeat reminder every", Rez.JsonData.menu_t13],
+            ["moveThreshold", "Steps that count as moving", Rez.JsonData.menu_t14]
         ] as Array<Array>;
     }
 }
