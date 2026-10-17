@@ -293,6 +293,18 @@
         </settingConfig>
     </setting>
 
+    <setting propertyKey="@Properties.hrMargin" title="@Strings.settings_hr_margin">
+        <settingConfig type="list">
+            <listEntry value="0">Off</listEntry>
+            <listEntry value="10">10 bpm</listEntry>
+            <listEntry value="15">15 bpm</listEntry>
+            <listEntry value="20">20 bpm</listEntry>
+            <listEntry value="25">25 bpm</listEntry>
+            <listEntry value="30">30 bpm</listEntry>
+            <listEntry value="40">40 bpm</listEntry>
+        </settingConfig>
+    </setting>
+
     <setting propertyKey="@Properties.aboveClockLines" title="@Strings.settings_above_clock_lines">
         <settingConfig type="list">
             <listEntry value="0">@Strings.settings_two_small_lines</listEntry>

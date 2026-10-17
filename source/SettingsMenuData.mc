@@ -26,7 +26,8 @@ module SettingsMenuData {
             ["remindersEnabled", "Stand-up reminders", null],
             ["remindWindowMin", "Remind after inactive", Rez.JsonData.menu_t12],
             ["remindRepeatMin", "Repeat reminder every", Rez.JsonData.menu_t13],
-            ["moveThreshold", "Steps that count as moving", Rez.JsonData.menu_t14]
+            ["moveThreshold", "Steps that count as moving", Rez.JsonData.menu_t14],
+            ["hrMargin", "Heart rate above resting that counts as moving (Hidden = off)", Rez.JsonData.menu_t15]
         ] as Array<Array>;
     }
 }

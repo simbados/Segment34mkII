@@ -4,6 +4,7 @@ import Toybox.Background;
 import Toybox.Lang;
 import Toybox.System;
 import Toybox.Time;
+import Toybox.UserProfile;
 
 // Sitting/walking state shared by the face and the stand-up reminder service. Both run
 // in the same app, so the state is kept in Application.Storage: the face samples the
@@ -21,6 +22,11 @@ import Toybox.Time;
 // A walk starts when the estimated movement begins at least ACTIVE_GAP_SEC after the
 // previous movement ended; it ends at the last movement, so both durations are backdated.
 //
+// Steps miss work like cleaning, so a heart rate of at least `hrMargin` bpm above the
+// resting rate also counts as movement. The heart rate history since the previous sample
+// (up to HR_LOOKBACK_SEC) gives the time span of the elevated readings; it is merged with
+// the step estimate. hrMargin 0 switches this off.
+//
 // Example (threshold 10, cadence 100/min):
 //   sitting for hours, then 10:04 sample: 400 new steps -> movement 4 min, walk started
 //   10:00 (even though the screen was off the whole time)
@@ -30,6 +36,9 @@ import Toybox.Time;
 module ActivityTracker {
     const ACTIVE_GAP_SEC = 120;
     const CADENCE_PER_MIN = 100;    // assumed walking steps per minute
+    const HR_LOOKBACK_SEC = 1800;   // heart rate history examined per sample
+    const HR_SAMPLE_SEC = 60;       // an elevated heart rate sample stands for this much time
+    const DEFAULT_RESTING_HR = 60;
     const MAX_TAIL_SEC = 60;        // the active time may run this long past the last sample
     const MIN_EVENT_GAP_SEC = 300;  // Garmin: background events at least 5 minutes apart
     const QUIET_FROM_HOUR = 22;     // no reminders from 22:00 ...
@@ -70,9 +79,42 @@ module ActivityTracker {
 
     function windowSec() as Number { return numberSetting("remindWindowMin", 30) * 60; }
     function repeatSec() as Number { return numberSetting("remindRepeatMin", 5) * 60; }
+    function hrMargin() as Number { return numberSetting("hrMargin", 20); }
     function threshold() as Number { return numberSetting("moveThreshold", 10); }
 
-    // Samples the step count. Returns true if a movement was detected.
+    // Time span [start, end] (unix seconds) of heart rate readings at least hrMargin above
+    // the resting rate in (since, now], or null if there are none.
+    function elevatedHeartRateSpan(since as Number, now as Number) as Array<Number>? {
+        var margin = hrMargin();
+        if(margin <= 0 || !(ActivityMonitor has :getHeartRateHistory)) { return null; }
+        var resting = DEFAULT_RESTING_HR;
+        var profile = UserProfile.getProfile();
+        if(profile has :restingHeartRate && profile.restingHeartRate != null && profile.restingHeartRate > 0) {
+            resting = profile.restingHeartRate;
+        }
+        if(since < now - HR_LOOKBACK_SEC) { since = now - HR_LOOKBACK_SEC; }
+        var iterator = ActivityMonitor.getHeartRateHistory(new Time.Duration(now - since), false);
+        var first = -1;
+        var last = -1;
+        var sample = iterator.next();
+        while(sample != null) {
+            var hr = sample.heartRate;
+            if(hr != null && hr != ActivityMonitor.INVALID_HR_SAMPLE && hr >= resting + margin) {
+                var t = sample.when.value();
+                if(t > since && t <= now) {
+                    if(first < 0) { first = t; }
+                    last = t;
+                }
+            }
+            sample = iterator.next();
+        }
+        if(first < 0) { return null; }
+        // a sample covers the time before it, since that is when the heart rate rose
+        var end = last + HR_SAMPLE_SEC;
+        return [first - HR_SAMPLE_SEC, (end > now) ? now : end] as Array<Number>;
+    }
+
+    // Samples the step count and heart rate. Returns true if a movement was detected.
     function update() as Boolean {
         reload(); // the other process (face or service) may have saved in the meantime
         var steps = ActivityMonitor.getInfo().steps;
@@ -82,19 +124,29 @@ module ActivityTracker {
         if(baseSteps < 0) { // first sample
             lastMove = now;
             activeStart = now;
-        } else if(steps >= baseSteps && steps - baseSteps >= threshold()) {
-            var d = steps - baseSteps;
-            var dur = d * 60 / CADENCE_PER_MIN;
-            if(dur > now - sampleTime) { dur = now - sampleTime; }
-            var from;
-            if(sampleTime - lastMove <= 15) { // continues the movement of the previous sample
-                from = lastMove;
-            } else {
-                from = now - dur;
-                if(from - lastMove >= ACTIVE_GAP_SEC) { activeStart = from; } // a new walk begins
+        } else {
+            var from = -1;
+            var to = -1;
+            if(steps >= baseSteps && steps - baseSteps >= threshold()) {
+                var dur = (steps - baseSteps) * 60 / CADENCE_PER_MIN;
+                if(dur > now - sampleTime) { dur = now - sampleTime; }
+                if(sampleTime - lastMove <= 15) { // continues the movement of the previous sample
+                    from = lastMove;
+                } else {
+                    from = now - dur;
+                }
+                to = from + dur;
             }
-            lastMove = from + dur;
-            moved = true;
+            var hr = elevatedHeartRateSpan(sampleTime, now);
+            if(hr != null) {
+                if(from < 0 || hr[0] < from) { from = hr[0]; }
+                if(to < 0 || hr[1] > to) { to = hr[1]; }
+            }
+            if(from >= 0) {
+                if(from - lastMove >= ACTIVE_GAP_SEC) { activeStart = from; } // a new walk begins
+                if(to > lastMove) { lastMove = to; }
+                moved = true;
+            }
         }
         baseSteps = steps; // also after a midnight reset (steps < baseSteps)
         sampleTime = now;
