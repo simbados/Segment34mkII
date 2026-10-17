@@ -1,0 +1,7 @@
+# Build config for sideloading to a Forerunner 970 only. The main monkey.jungle
+# lists every supported watch, which fails when only the fr970 device files are installed.
+project.manifest = manifest.xml
+project.typecheck = 1
+project.optimization = 3p
+fr970.excludeAnnotations = Round240;Round260;Round280;Round360;Round390;Round416;MIP;InstinctCrossover;NoWeatherCache;LowMem;Square
+fr970.resourcePath = resources;disp-resources/amoled

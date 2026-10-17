@@ -26,8 +26,15 @@ class Segment34App extends Application.AppBase {
     }
 
     function onSettingsChanged() as Void {
-        mView.onSettingsChanged();
+        if (mView != null) {
+            mView.onSettingsChanged();
+        }
         WatchUi.requestUpdate();
+    }
+
+    // On-watch settings (long press the watch face, then customize).
+    function getSettingsView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] or Null {
+        return [new SettingsMenu(), new SettingsMenuDelegate()];
     }
 
 }
