@@ -49,6 +49,8 @@ class Segment34View extends WatchUi.WatchFace {
     hidden var fontTinyData as WatchUi.FontResource?;
     hidden var fontSmallData as WatchUi.FontResource?;
     hidden var fontLargeData as WatchUi.FontResource?;
+    hidden var fontAboveLine as WatchUi.FontResource?;  // optional bigger font for the single line above the clock
+    hidden var aboveLineHeight as Number = 0;
     hidden var fontAODData as WatchUi.FontResource?;
     hidden var fontBottomData as WatchUi.FontResource?;
     hidden var fontBattery as WatchUi.FontResource?;
@@ -545,6 +547,8 @@ class Segment34View extends WatchUi.WatchFace {
         fontTinyData = Application.loadResource(Rez.Fonts.led_small_lines);
         loadSmallFont(Rez.Fonts.led, Rez.Fonts.led_inbetween, Rez.Fonts.led_lines);
         fontLargeData = Application.loadResource(Rez.Fonts.led_big);
+        fontAboveLine = Application.loadResource(Rez.Fonts.led_huge);
+        aboveLineHeight = 54;
         fontBottomData = fontLargeData;
         fontLabel = Application.loadResource(Rez.Fonts.storre);
         fontAODData = Application.loadResource(Rez.Fonts.led);
@@ -871,7 +875,9 @@ class Segment34View extends WatchUi.WatchFace {
         // vertically centered in the space of both
         dc.setColor(themeColors[dataVal], Graphics.COLOR_TRANSPARENT);
         if(propAboveClockLines == 1) {
-            dc.drawText(centerX, yn2 + (2 * smallDataHeight + marginY - largeDataHeight) / 2, fontLargeData, values[:dataAboveLine1], Graphics.TEXT_JUSTIFY_CENTER);
+            var aboveFont = (fontAboveLine != null) ? fontAboveLine : fontLargeData;
+            var aboveHeight = (fontAboveLine != null) ? aboveLineHeight : largeDataHeight;
+            dc.drawText(centerX, yn2 + (2 * smallDataHeight + marginY - aboveHeight) / 2, aboveFont, values[:dataAboveLine1], Graphics.TEXT_JUSTIFY_CENTER);
         } else {
             dc.drawText(centerX, yn2, fontSmallData, values[:dataAboveLine1], Graphics.TEXT_JUSTIFY_CENTER);
             dc.drawText(centerX, yn1, fontSmallData, values[:dataAboveLine2], Graphics.TEXT_JUSTIFY_CENTER);
