@@ -7,19 +7,21 @@ module SettingsMenuData {
         return [
             ["colorTheme", "Color Theme", Rez.JsonData.menu_t0],
             ["nightColorTheme", "Night Color Theme", Rez.JsonData.menu_t1],
-            ["weatherLine1Shows", "Line 1 above clock shows", Rez.JsonData.menu_t2],
-            ["weatherLine2Shows", "Line 2 above clock shows", Rez.JsonData.menu_t3],
-            ["dateFieldShows", "Line below clock shows", Rez.JsonData.menu_t4],
-            ["leftValueShows", "Bottom value 1 (left)", Rez.JsonData.menu_t5],
-            ["middleValueShows", "Bottom value 2", Rez.JsonData.menu_t5],
-            ["rightValueShows", "Bottom value 3", Rez.JsonData.menu_t5],
-            ["fourthValueShows", "Bottom value 4 (if available)", Rez.JsonData.menu_t5],
-            ["bottomFieldShows", "Bottom 5 digit value", Rez.JsonData.menu_t6],
-            ["leftBarShows", "Left Bar Shows", Rez.JsonData.menu_t7],
-            ["rightBarShows", "Right Bar Shows", Rez.JsonData.menu_t7],
-            ["sunriseFieldShows", "Top left small data field", Rez.JsonData.menu_t8],
-            ["sunsetFieldShows", "Top right small data field", Rez.JsonData.menu_t8],
-            ["aodFieldShows", "Always On (below clock)", Rez.JsonData.menu_t9]
+            ["aboveClockLines", "Lines above clock", Rez.JsonData.menu_t2],
+            ["weatherLine1Shows", "Line 1 above clock shows", Rez.JsonData.menu_t3],
+            ["weatherLine2Shows", "Line 2 above clock shows", Rez.JsonData.menu_t4],
+            ["dateFieldShows", "Line below clock shows", Rez.JsonData.menu_t5],
+            ["notificationCountShows", "Number left of seconds shows", Rez.JsonData.menu_t6],
+            ["leftValueShows", "Bottom value 1 (left)", Rez.JsonData.menu_t7],
+            ["middleValueShows", "Bottom value 2", Rez.JsonData.menu_t7],
+            ["rightValueShows", "Bottom value 3", Rez.JsonData.menu_t7],
+            ["fourthValueShows", "Bottom value 4 (if available)", Rez.JsonData.menu_t7],
+            ["bottomFieldShows", "Bottom 5 digit value", Rez.JsonData.menu_t8],
+            ["leftBarShows", "Left Bar Shows", Rez.JsonData.menu_t9],
+            ["rightBarShows", "Right Bar Shows", Rez.JsonData.menu_t9],
+            ["sunriseFieldShows", "Top left small data field", Rez.JsonData.menu_t10],
+            ["sunsetFieldShows", "Top right small data field", Rez.JsonData.menu_t10],
+            ["aodFieldShows", "Always On (below clock)", Rez.JsonData.menu_t11]
         ] as Array<Array>;
     }
 }

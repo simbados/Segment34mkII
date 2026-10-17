@@ -146,6 +146,11 @@ class Segment34View extends WatchUi.WatchFace {
     hidden var propSunsetFieldShows as Number = 40;
     hidden var propWeatherLine1Shows as Number = 49;
     hidden var propWeatherLine2Shows as Number = 50;
+    hidden var propAboveClockLines as Number = 1;
+    // Inactivity tracking for data type 79 (see getInactiveMinutes)
+    const INACTIVE_STEP_THRESHOLD = 10;
+    hidden var inactiveBaseSteps as Number = -1;
+    hidden var inactiveSince as Number = 0;
     hidden var propDateFormat as Number = 0;
     hidden var propNotificationCountShows as Number = 36;
     hidden var propTzOffset1 as Number = 0;
@@ -638,7 +643,7 @@ class Segment34View extends WatchUi.WatchFace {
         values[:dataTopLeft] = getValueByType(propSunriseFieldShows, 5);
         values[:dataTopRight] = getValueByType(propSunsetFieldShows, 5);
         values[:dataAboveLine1] = getValueByTypeWithUnit(propWeatherLine1Shows, 10);
-        values[:dataAboveLine2] = getValueByTypeWithUnit(propWeatherLine2Shows, 10);
+        values[:dataAboveLine2] = (propAboveClockLines == 1) ? "" : getValueByTypeWithUnit(propWeatherLine2Shows, 10);
         values[:dataBelow] = getValueByTypeWithUnit(propDateFieldShows, 10);
         values[:dataNotifications] = getValueByTypeWithUnit(propNotificationCountShows, 2);
         values[:dataBottomLeft] = getValueByType(propLeftValueShows, fieldWidths[0]);
@@ -860,10 +865,15 @@ class Segment34View extends WatchUi.WatchFace {
             }
         }
 
-        // Draw Lines above clock
+        // Draw Lines above clock: either two small lines, or line 1 in the large font
+        // vertically centered in the space of both
         dc.setColor(themeColors[dataVal], Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, yn2, fontSmallData, values[:dataAboveLine1], Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(centerX, yn1, fontSmallData, values[:dataAboveLine2], Graphics.TEXT_JUSTIFY_CENTER);        
+        if(propAboveClockLines == 1) {
+            dc.drawText(centerX, yn2 + (2 * smallDataHeight + marginY - largeDataHeight) / 2, fontLargeData, values[:dataAboveLine1], Graphics.TEXT_JUSTIFY_CENTER);
+        } else {
+            dc.drawText(centerX, yn2, fontSmallData, values[:dataAboveLine1], Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(centerX, yn1, fontSmallData, values[:dataAboveLine2], Graphics.TEXT_JUSTIFY_CENTER);
+        }
 
         // Draw Clock
         if(propClockOutlineStyle != 5) {
@@ -1443,6 +1453,7 @@ class Segment34View extends WatchUi.WatchFace {
         propSunsetFieldShows = p.getValue("sunsetFieldShows") as Number;
         propWeatherLine1Shows = p.getValue("weatherLine1Shows") as Number;
         propWeatherLine2Shows = p.getValue("weatherLine2Shows") as Number;
+        propAboveClockLines = p.getValue("aboveClockLines") as Number;
         propDateFieldShows = p.getValue("dateFieldShows") as Number;
         propShowSeconds = p.getValue("showSeconds") as Boolean;
         propAlwaysShowSeconds = p.getValue("alwaysShowSeconds") as Boolean;
@@ -2456,9 +2467,32 @@ class Segment34View extends WatchUi.WatchFace {
             }
             var distFactor = propIsMetricDistance ? 0.001 : 0.000621371;
             val = formatDistanceByWidth((complicationType == 77 ? cachedRunDist7Days : cachedBikeDist7Days) * distFactor, width);
+        } else if(complicationType == 79) { // Inactive minutes
+            val = getInactiveMinutes().format(numberFormat);
         }
 
         return val;
+    }
+
+    // Minutes since the step count last rose by at least INACTIVE_STEP_THRESHOLD, so a
+    // few fidgeting steps do not count as moving. Starts at 0 when the face is loaded.
+    //
+    // Example (threshold 10): 1200 steps at 10:00, 1205 at 10:20 -> 20 min;
+    //                         1215 at 10:25 -> 0 min (reset, baseline now 1215)
+    hidden function getInactiveMinutes() as Number {
+        var steps = ActivityMonitor.getInfo().steps;
+        var now = Time.now().value();
+        if(steps == null) { return 0; }
+        if(inactiveBaseSteps < 0) { // first call
+            inactiveBaseSteps = steps;
+            inactiveSince = now;
+        } else if(steps < inactiveBaseSteps) { // step counter reset at midnight
+            inactiveBaseSteps = steps;
+        } else if(steps - inactiveBaseSteps >= INACTIVE_STEP_THRESHOLD) {
+            inactiveBaseSteps = steps;
+            inactiveSince = now;
+        }
+        return (now - inactiveSince) / 60;
     }
 
     hidden function getDataArrayByType(dataSource as Number) as Array<Number> {
@@ -2608,6 +2642,7 @@ class Segment34View extends WatchUi.WatchFace {
             case 74: return formatLabel(Rez.Strings.LABEL_FL, Rez.Strings.LABEL_FL, Rez.Strings.LABEL_FL_3, labelSize);
             case 75: return formatLabel(Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_3, labelSize);
             case 76: return formatLabel(Rez.Strings.LABEL_RHR_1, Rez.Strings.LABEL_RHR_2, Rez.Strings.LABEL_RHR_3, labelSize);
+            case 79: return formatLabel(Rez.Strings.LABEL_INACT_1, Rez.Strings.LABEL_INACT_2, Rez.Strings.LABEL_INACT_3, labelSize);
         }
         return "";
     }
@@ -2684,6 +2719,7 @@ class Segment34View extends WatchUi.WatchFace {
             case 74: return formatLabel(Rez.Strings.LABEL_FL, Rez.Strings.LABEL_FL, labelSize);
             case 75: return formatLabel(Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, Rez.Strings.LABEL_HRS_NEXT_SUN_EVENT_1, labelSize);
             case 76: return formatLabel(Rez.Strings.LABEL_RHR_1, Rez.Strings.LABEL_RHR_2, labelSize);
+            case 79: return formatLabel(Rez.Strings.LABEL_INACT_1, Rez.Strings.LABEL_INACT_2, labelSize);
         }
         return "";
     }

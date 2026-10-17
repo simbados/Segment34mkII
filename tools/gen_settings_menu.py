@@ -19,7 +19,8 @@ from pathlib import Path
 # Settings shown in the on-watch menu, in menu order.
 MENU = [
     "colorTheme", "nightColorTheme",
-    "weatherLine1Shows", "weatherLine2Shows", "dateFieldShows",
+    "aboveClockLines", "weatherLine1Shows", "weatherLine2Shows", "dateFieldShows",
+    "notificationCountShows",
     "leftValueShows", "middleValueShows", "rightValueShows", "fourthValueShows",
     "bottomFieldShows",
     "leftBarShows", "rightBarShows",
