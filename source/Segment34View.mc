@@ -1453,7 +1453,9 @@ class Segment34View extends WatchUi.WatchFace {
         propSunsetFieldShows = p.getValue("sunsetFieldShows") as Number;
         propWeatherLine1Shows = p.getValue("weatherLine1Shows") as Number;
         propWeatherLine2Shows = p.getValue("weatherLine2Shows") as Number;
-        propAboveClockLines = p.getValue("aboveClockLines") as Number;
+        // Added in this fork: an older saved settings file on the watch has no value yet
+        var aboveClockLines = p.getValue("aboveClockLines");
+        propAboveClockLines = (aboveClockLines == null) ? 1 : aboveClockLines as Number;
         propDateFieldShows = p.getValue("dateFieldShows") as Number;
         propShowSeconds = p.getValue("showSeconds") as Boolean;
         propAlwaysShowSeconds = p.getValue("alwaysShowSeconds") as Boolean;
