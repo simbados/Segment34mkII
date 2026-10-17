@@ -23,9 +23,11 @@ import Toybox.UserProfile;
 // previous movement ended; it ends at the last movement, so both durations are backdated.
 //
 // Steps miss work like cleaning, so a heart rate of at least `hrMargin` bpm above the
-// resting rate also counts as movement. The heart rate history since the previous sample
-// (up to HR_LOOKBACK_SEC) gives the time span of the elevated readings; it is merged with
-// the step estimate. hrMargin 0 switches this off.
+// resting rate also counts as movement, but only if it stays that high for at least
+// HR_MIN_RUN_SEC without a lower reading in between. A short rise (a stressful call,
+// coffee) must not clear the inactivity. The heart rate history is examined back far
+// enough to see such a run completely (HR_RUN_LOOKBACK_SEC) and the run is backdated to
+// its first reading; it is merged with the step estimate. hrMargin 0 switches this off.
 //
 // Example (threshold 10, cadence 100/min):
 //   sitting for hours, then 10:04 sample: 400 new steps -> movement 4 min, walk started
@@ -36,7 +38,10 @@ import Toybox.UserProfile;
 module ActivityTracker {
     const ACTIVE_GAP_SEC = 120;
     const CADENCE_PER_MIN = 100;    // assumed walking steps per minute
-    const HR_LOOKBACK_SEC = 1800;   // heart rate history examined per sample
+    const HR_LOOKBACK_SEC = 1800;   // heart rate history examined per sample (at most)
+    const HR_RUN_LOOKBACK_SEC = 600; // ... and at least, to see a run that began before the previous sample
+    const HR_MIN_RUN_SEC = 180;     // elevated heart rate must last this long to count
+    const HR_RUN_GAP_SEC = 150;     // readings further apart than this are not one run
     const HR_SAMPLE_SEC = 60;       // an elevated heart rate sample stands for this much time
     const DEFAULT_RESTING_HR = 60;
     const MAX_TAIL_SEC = 60;        // the active time may run this long past the last sample
@@ -79,11 +84,15 @@ module ActivityTracker {
 
     function windowSec() as Number { return numberSetting("remindWindowMin", 30) * 60; }
     function repeatSec() as Number { return numberSetting("remindRepeatMin", 5) * 60; }
-    function hrMargin() as Number { return numberSetting("hrMargin", 20); }
+    function hrMargin() as Number { return numberSetting("hrMargin", 30); }
     function threshold() as Number { return numberSetting("moveThreshold", 10); }
 
-    // Time span [start, end] (unix seconds) of heart rate readings at least hrMargin above
-    // the resting rate in (since, now], or null if there are none.
+    // Time span [start, end] (unix seconds) of sustained elevated heart rate: readings at
+    // least hrMargin above the resting rate, in runs of at least HR_MIN_RUN_SEC. Looks back
+    // to the previous sample, but at least HR_RUN_LOOKBACK_SEC. Returns null if there is none.
+    //
+    // Example (margin 30, resting 55, readings each minute): 90 92 95 at 10:01-10:03 ->
+    //   [10:00, 10:04]; 90 at 10:01, 70 at 10:02 -> null (too short)
     function elevatedHeartRateSpan(since as Number, now as Number) as Array<Number>? {
         var margin = hrMargin();
         if(margin <= 0 || !(ActivityMonitor has :getHeartRateHistory)) { return null; }
@@ -92,24 +101,38 @@ module ActivityTracker {
         if(profile has :restingHeartRate && profile.restingHeartRate != null && profile.restingHeartRate > 0) {
             resting = profile.restingHeartRate;
         }
+        if(since > now - HR_RUN_LOOKBACK_SEC) { since = now - HR_RUN_LOOKBACK_SEC; }
         if(since < now - HR_LOOKBACK_SEC) { since = now - HR_LOOKBACK_SEC; }
         var iterator = ActivityMonitor.getHeartRateHistory(new Time.Duration(now - since), false);
         var first = -1;
         var last = -1;
+        var runStart = -1;
+        var runLast = -1;
         var sample = iterator.next();
         while(sample != null) {
             var hr = sample.heartRate;
-            if(hr != null && hr != ActivityMonitor.INVALID_HR_SAMPLE && hr >= resting + margin) {
+            if(hr != null && hr != ActivityMonitor.INVALID_HR_SAMPLE) {
                 var t = sample.when.value();
-                if(t > since && t <= now) {
-                    if(first < 0) { first = t; }
-                    last = t;
+                var elevated = hr >= resting + margin;
+                if(elevated && runStart >= 0 && t - runLast <= HR_RUN_GAP_SEC) {
+                    runLast = t;
+                } else {
+                    if(runStart >= 0 && runLast - runStart + HR_SAMPLE_SEC >= HR_MIN_RUN_SEC) {
+                        if(first < 0) { first = runStart; }
+                        last = runLast;
+                    }
+                    runStart = elevated ? t : -1;
+                    runLast = t;
                 }
             }
             sample = iterator.next();
         }
+        if(runStart >= 0 && runLast - runStart + HR_SAMPLE_SEC >= HR_MIN_RUN_SEC) {
+            if(first < 0) { first = runStart; }
+            last = runLast;
+        }
         if(first < 0) { return null; }
-        // a sample covers the time before it, since that is when the heart rate rose
+        // a reading covers the time before it, since that is when the heart rate rose
         var end = last + HR_SAMPLE_SEC;
         return [first - HR_SAMPLE_SEC, (end > now) ? now : end] as Array<Number>;
     }
