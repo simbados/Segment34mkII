@@ -2,6 +2,7 @@ import Toybox.ActivityMonitor;
 import Toybox.Application;
 import Toybox.Background;
 import Toybox.Lang;
+import Toybox.SensorHistory;
 import Toybox.System;
 import Toybox.Time;
 import Toybox.Time.Gregorian;
@@ -120,6 +121,37 @@ module ActivityTracker {
         System.println(i.year.format("%04d") + "-" + i.month.format("%02d") + "-" + i.day.format("%02d") + " " + hms(now) + " " + src + " " + msg);
     }
 
+    // Other signals, logged only (not used for detection), to see later whether one of
+    // them catches standing work that has no steps. History values carry their age.
+    // The histories are skipped in the background service (not known to be allowed there).
+    // Example: " hr=78@-40 stress=-1/12@-180 move=1 kcal=1830 im=24"
+    //   (stress -1: no live score; 12 from the history, 3 minutes old)
+    function signals(now as Number, withHistory as Boolean) as String {
+        var info = ActivityMonitor.getInfo();
+        var out = "";
+        var hr = "?";
+        if(withHistory && ActivityMonitor has :getHeartRateHistory) {
+            var sample = ActivityMonitor.getHeartRateHistory(1, true).next();
+            if(sample != null && sample.heartRate != ActivityMonitor.INVALID_HR_SAMPLE) {
+                hr = sample.heartRate.format("%d") + "@" + (sample.when.value() - now);
+            }
+        }
+        out += " hr=" + hr;
+        var live = (info has :stressScore && info.stressScore != null) ? info.stressScore : -1;
+        var hist = "?";
+        if(withHistory && Toybox has :SensorHistory && SensorHistory has :getStressHistory) {
+            var sample = SensorHistory.getStressHistory({:period => 1, :order => SensorHistory.ORDER_NEWEST_FIRST}).next();
+            if(sample != null) {
+                hist = ((sample.data == null) ? "-" : sample.data.format("%d")) + "@" + (sample.when.value() - now);
+            }
+        }
+        out += " stress=" + live + "/" + hist;
+        out += " move=" + ((info has :moveBarLevel && info.moveBarLevel != null) ? info.moveBarLevel : "?");
+        out += " kcal=" + ((info.calories != null) ? info.calories : "?");
+        out += " im=" + ((info has :activeMinutesDay && info.activeMinutesDay != null) ? info.activeMinutesDay.total : "?");
+        return out;
+    }
+
     // Samples the step count. `src` names the caller for the log ("face", "show", "svc").
     // Returns true if this sample was on feet.
     function update(src as String) as Boolean {
@@ -215,7 +247,7 @@ module ActivityTracker {
         save();
         log(src, "S steps=" + steps + " d=" + d + " dt=" + dt + " win=" + win + " feet=" + (lastOnFeet ? 1 : 0) + event
             + " bout=" + hms(curStart) + "-" + hms(lastMove) + " st=" + (curEndSteps - curStartSteps)
-            + " prev=" + prevDur + "s/" + prevSteps + " show=" + inactiveMinutes() + "/" + activeMinutes() + "/" + boutSteps());
+            + " prev=" + prevDur + "s/" + prevSteps + " show=" + inactiveMinutes() + "/" + activeMinutes() + "/" + boutSteps() + signals(now, !src.equals("svc")));
         return lastOnFeet;
     }
 
