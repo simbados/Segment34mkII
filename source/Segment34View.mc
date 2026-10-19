@@ -2480,9 +2480,10 @@ class Segment34View extends WatchUi.WatchFace {
         } else if(complicationType == 79) { // Inactive minutes
             val = ActivityTracker.inactiveMinutes().format(numberFormat);
         } else if(complicationType == 80) { // Inactive / active minutes
-            val = ActivityTracker.inactiveMinutes().format(numberFormat) + "/" + ActivityTracker.activeMinutes().format(numberFormat);
+            // "!" is a narrow dot separator in the LED fonts (tools/add_separator_glyph.py)
+            val = ActivityTracker.inactiveMinutes().format(numberFormat) + "!" + ActivityTracker.activeMinutes().format(numberFormat);
         } else if(complicationType == 82) { // Inactive / active minutes / bout steps
-            val = ActivityTracker.inactiveMinutes().format(numberFormat) + "/" + ActivityTracker.activeMinutes().format(numberFormat) + "/" + ActivityTracker.boutSteps().format(numberFormat);
+            val = ActivityTracker.inactiveMinutes().format(numberFormat) + "!" + ActivityTracker.activeMinutes().format(numberFormat) + "!" + ActivityTracker.boutSteps().format(numberFormat);
         } else if(complicationType == 81) { // Steps of the current or last active bout
             val = ActivityTracker.boutSteps().format(numberFormat);
         }
