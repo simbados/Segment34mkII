@@ -340,6 +340,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="80">@Strings.settings_inactive_active_minutes</listEntry>
+            <listEntry value="82">@Strings.settings_inactive_active_steps</listEntry>
             <listEntry value="81">@Strings.settings_bout_steps</listEntry>
         </settingConfig>
     </setting>
@@ -382,6 +383,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="80">@Strings.settings_inactive_active_minutes</listEntry>
+            <listEntry value="82">@Strings.settings_inactive_active_steps</listEntry>
             <listEntry value="81">@Strings.settings_bout_steps</listEntry>
         </settingConfig>
     </setting>
@@ -419,6 +421,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="80">@Strings.settings_inactive_active_minutes</listEntry>
+            <listEntry value="82">@Strings.settings_inactive_active_steps</listEntry>
             <listEntry value="81">@Strings.settings_bout_steps</listEntry>
         </settingConfig>
     </setting>
@@ -728,6 +731,7 @@
             <listEntry value="57">@Strings.settings_next_calendar_event_time</listEntry>
             <listEntry value="71">@Strings.settings_cgm_glucose_trend</listEntry>
             <listEntry value="80">@Strings.settings_inactive_active_minutes</listEntry>
+            <listEntry value="82">@Strings.settings_inactive_active_steps</listEntry>
             <listEntry value="81">@Strings.settings_bout_steps</listEntry>
         </settingConfig>
     </setting>
