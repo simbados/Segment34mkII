@@ -84,4 +84,4 @@ char id=192 x=2296 y=0 width=28 height=40 xoffset=0 yoffset=0 xadvance=36 page=0
 char id=262 x=2326 y=0 width=28 height=40 xoffset=0 yoffset=0 xadvance=36 page=0
 char id=323 x=2356 y=0 width=28 height=40 xoffset=0 yoffset=0 xadvance=36 page=0
 char id=377 x=2386 y=0 width=28 height=40 xoffset=0 yoffset=0 xadvance=36 page=0
-char id=33 x=2416 y=0 width=4 height=40 xoffset=4 yoffset=0 xadvance=12 page=0
+char id=33 x=2416 y=0 width=4 height=40 xoffset=4 yoffset=0 xadvance=20 page=0
