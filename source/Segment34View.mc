@@ -686,7 +686,7 @@ class Segment34View extends WatchUi.WatchFace {
         visible = true;
         // Pick up what the reminder service saw while the face was not shown
         ActivityTracker.reload();
-        ActivityTracker.update();
+        ActivityTracker.update("show");
         ActivityTracker.scheduleReminder();
         lastUpdate = null;
         lastSlowUpdate = null;
@@ -709,7 +709,7 @@ class Segment34View extends WatchUi.WatchFace {
             updateColorTheme();
             updateWeather();
             // Sample steps once a minute; a movement moves the stand-up reminder later
-            if(ActivityTracker.update()) { ActivityTracker.scheduleReminder(); }
+            if(ActivityTracker.update("face")) { ActivityTracker.scheduleReminder(); }
         }
 
         if(lastUpdate == null or unix_timestamp - lastUpdate >= propUpdateFreq) {

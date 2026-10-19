@@ -16,7 +16,7 @@ class ReminderService extends System.ServiceDelegate {
 
     function onTemporalEvent() as Void {
         ActivityTracker.reload();
-        ActivityTracker.update();
+        ActivityTracker.update("svc");
         if(!ActivityTracker.remindersEnabled()) {
             Background.deleteTemporalEvent();
             Background.exit(true);
@@ -25,6 +25,7 @@ class ReminderService extends System.ServiceDelegate {
         var now = Time.now().value();
         var inactive = ActivityTracker.inactiveMinutes();
         var next;
+        var notifiedNow = false;
         if(ActivityTracker.isQuietHour()) {
             next = now + ActivityTracker.QUIET_RECHECK_SEC;
         } else {
@@ -40,12 +41,14 @@ class ReminderService extends System.ServiceDelegate {
                     Notifications.showNotification("Stand up!", inactive.toString() + " min inactive", {:dismissPrevious => true});
                 }
                 Application.Storage.setValue("lastNotify", now);
+                notifiedNow = true;
                 due = now + ActivityTracker.repeatSec();
             }
             // wake up again at least every few minutes to sample the steps
             next = (due < now + ActivityTracker.SAMPLE_EVERY_SEC) ? due : now + ActivityTracker.SAMPLE_EVERY_SEC;
         }
         ActivityTracker.scheduleAt(next);
+        ActivityTracker.log("svc", "R inactive=" + inactive + " notified=" + (notifiedNow ? 1 : 0) + " next=" + ActivityTracker.hms(next));
         Background.exit(true);
     }
 }

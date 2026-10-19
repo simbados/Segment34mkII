@@ -4,6 +4,7 @@ import Toybox.Background;
 import Toybox.Lang;
 import Toybox.System;
 import Toybox.Time;
+import Toybox.Time.Gregorian;
 
 // Sitting/on-feet state shared by the face and the stand-up reminder service. Both run
 // in the same app, so the state is kept in Application.Storage: the face samples the
@@ -23,6 +24,10 @@ import Toybox.Time;
 // A bout starts at the first steps of its window and continues
 // while the pause between movements is under PAUSE_SEC. A new bout replaces the last one
 // shown only once it lasts MIN_BOUT_SEC, so a few steps to the bin do not wipe it.
+//
+// Debug log: System.println writes to GARMIN/APPS/LOGS/<PRG NAME>.TXT on the watch if
+// that file exists (create it empty to switch logging on, delete it to switch off).
+// One line per sample, see log().
 //
 // Example (threshold 10, samples each minute, steps per interval):
 //   10:01 +6   window 6   -> sitting
@@ -101,8 +106,23 @@ module ActivityTracker {
         return (dur > limit) ? limit : dur;
     }
 
-    // Samples the step count. Returns true if this sample was on feet.
-    function update() as Boolean {
+    // Clock time of a unix timestamp, e.g. "14:03:27".
+    function hms(t as Number) as String {
+        var i = Gregorian.info(new Time.Moment(t), Time.FORMAT_SHORT);
+        return i.hour.format("%02d") + ":" + i.min.format("%02d") + ":" + i.sec.format("%02d");
+    }
+
+    // Writes a line to the debug log, prefixed with the date and time.
+    // Example: "2026-10-19 14:03:27 face S steps=5123 d=12 dt=60 win=18 feet=1 ..."
+    function log(src as String, msg as String) as Void {
+        var now = Time.now().value();
+        var i = Gregorian.info(new Time.Moment(now), Time.FORMAT_SHORT);
+        System.println(i.year.format("%04d") + "-" + i.month.format("%02d") + "-" + i.day.format("%02d") + " " + hms(now) + " " + src + " " + msg);
+    }
+
+    // Samples the step count. `src` names the caller for the log ("face", "show", "svc").
+    // Returns true if this sample was on feet.
+    function update(src as String) as Boolean {
         reload(); // the other process (face or service) may have saved in the meantime
         var steps = ActivityMonitor.getInfo().steps;
         if(steps == null) { return false; }
@@ -116,6 +136,7 @@ module ActivityTracker {
             curStartSteps = steps;
             curEndSteps = steps;
             save();
+            log(src, "S init steps=" + steps);
             return false;
         }
         var tPrev = bufTimes[n - 1];
@@ -132,13 +153,16 @@ module ActivityTracker {
         // from: when the steps of this sample began, fromSteps: step total just before
         var from = -1;
         var fromSteps = bufSteps[n - 1];
+        var win = -1;    // steps in the window (-1: gap)
+        var event = "";  // "new" bout / "trim" end, for the log
         if(dt > DENSE_MAX_SEC) {
             if(d >= GAP_MIN_STEPS) { from = now - stepSeconds(d, dt); }
         } else if(d > 0) {
             // window: the oldest sample within WINDOW_SEC, reached through dense intervals only
             var ref = n - 1;
             while(ref > 0 && bufTimes[ref - 1] >= now - WINDOW_SEC && bufTimes[ref] - bufTimes[ref - 1] <= DENSE_MAX_SEC) { ref--; }
-            if(steps - bufSteps[ref] >= threshold()) {
+            win = steps - bufSteps[ref];
+            if(win >= threshold()) {
                 if(lastOnFeet) {
                     from = tPrev;
                 } else {
@@ -168,6 +192,7 @@ module ActivityTracker {
                 }
                 curStart = from;
                 curStartSteps = fromSteps;
+                event = " new";
             }
             if(to > lastMove) { lastMove = to; }
             curEndSteps = steps;
@@ -177,7 +202,7 @@ module ActivityTracker {
             var lastDt = tPrev - bufTimes[n - 2];
             var lastDur = stepSeconds(bufSteps[n - 1] - bufSteps[n - 2], lastDt);
             if(lastDur < lastDt / 2) { lastDur = lastDt / 2; }
-            if(bufTimes[n - 2] + lastDur > curStart) { lastMove = bufTimes[n - 2] + lastDur; }
+            if(bufTimes[n - 2] + lastDur > curStart) { lastMove = bufTimes[n - 2] + lastDur; event = " trim"; }
         }
         lastOnFeet = from >= 0;
 
@@ -188,6 +213,9 @@ module ActivityTracker {
             bufSteps = bufSteps.slice(1, null);
         }
         save();
+        log(src, "S steps=" + steps + " d=" + d + " dt=" + dt + " win=" + win + " feet=" + (lastOnFeet ? 1 : 0) + event
+            + " bout=" + hms(curStart) + "-" + hms(lastMove) + " st=" + (curEndSteps - curStartSteps)
+            + " prev=" + prevDur + "s/" + prevSteps + " show=" + inactiveMinutes() + "/" + activeMinutes() + "/" + boutSteps());
         return lastOnFeet;
     }
 
