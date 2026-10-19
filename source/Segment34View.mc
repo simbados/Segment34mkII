@@ -547,8 +547,8 @@ class Segment34View extends WatchUi.WatchFace {
         fontTinyData = Application.loadResource(Rez.Fonts.led_small_lines);
         loadSmallFont(Rez.Fonts.led, Rez.Fonts.led_inbetween, Rez.Fonts.led_lines);
         fontLargeData = Application.loadResource(Rez.Fonts.led_big);
-        fontAboveLine = Application.loadResource(Rez.Fonts.led_huge);
-        aboveLineHeight = 54;
+        fontAboveLine = Application.loadResource(Rez.Fonts.led_x2);
+        aboveLineHeight = 40;
         fontBottomData = fontLargeData;
         fontLabel = Application.loadResource(Rez.Fonts.storre);
         fontAODData = Application.loadResource(Rez.Fonts.led);
