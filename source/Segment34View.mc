@@ -2481,6 +2481,8 @@ class Segment34View extends WatchUi.WatchFace {
             val = ActivityTracker.inactiveMinutes().format(numberFormat);
         } else if(complicationType == 80) { // Inactive / active minutes
             val = ActivityTracker.inactiveMinutes().format(numberFormat) + "/" + ActivityTracker.activeMinutes().format(numberFormat);
+        } else if(complicationType == 81) { // Steps of the current or last active bout
+            val = ActivityTracker.boutSteps().format(numberFormat);
         }
 
         return val;
@@ -2635,6 +2637,7 @@ class Segment34View extends WatchUi.WatchFace {
             case 76: return formatLabel(Rez.Strings.LABEL_RHR_1, Rez.Strings.LABEL_RHR_2, Rez.Strings.LABEL_RHR_3, labelSize);
             case 79: return formatLabel(Rez.Strings.LABEL_INACT_1, Rez.Strings.LABEL_INACT_2, Rez.Strings.LABEL_INACT_3, labelSize);
             case 80: return formatLabel(Rez.Strings.LABEL_INACTACT_1, Rez.Strings.LABEL_INACTACT_2, Rez.Strings.LABEL_INACTACT_3, labelSize);
+            case 81: return formatLabel(Rez.Strings.LABEL_BSTEPS_1, Rez.Strings.LABEL_BSTEPS_2, Rez.Strings.LABEL_BSTEPS_3, labelSize);
         }
         return "";
     }
@@ -2713,6 +2716,7 @@ class Segment34View extends WatchUi.WatchFace {
             case 76: return formatLabel(Rez.Strings.LABEL_RHR_1, Rez.Strings.LABEL_RHR_2, labelSize);
             case 79: return formatLabel(Rez.Strings.LABEL_INACT_1, Rez.Strings.LABEL_INACT_2, labelSize);
             case 80: return formatLabel(Rez.Strings.LABEL_INACTACT_1, Rez.Strings.LABEL_INACTACT_2, labelSize);
+            case 81: return formatLabel(Rez.Strings.LABEL_BSTEPS_1, Rez.Strings.LABEL_BSTEPS_2, labelSize);
         }
         return "";
     }

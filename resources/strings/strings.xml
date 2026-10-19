@@ -201,6 +201,9 @@
     <string id="LABEL_RHR_1">RHR</string>
     <string id="LABEL_RHR_2">REST HR</string>
     <string id="LABEL_RHR_3">RESTING HR</string>
+    <string id="LABEL_BSTEPS_1">ACT ST</string>
+    <string id="LABEL_BSTEPS_2">ACT STEPS</string>
+    <string id="LABEL_BSTEPS_3">ACTIVE STEPS</string>
     <string id="LABEL_INACT_1">INACT</string>
     <string id="LABEL_INACT_2">INACTIVE</string>
     <string id="LABEL_INACT_3">INACTIVE MIN</string>
@@ -298,14 +301,14 @@
     <string id="settings_next_sun_event" scope="settings">Next sun event (sunset/sunrise) time</string>
     <string id="settings_hrs_next_sun_event" scope="settings">Hours to next sun event (sunset/sunrise)</string>
     <string id="settings_resting_heart_rate" scope="settings">Resting Heart Rate</string>
+    <string id="settings_bout_steps" scope="settings">Steps of current or last active bout</string>
     <string id="settings_inactive_minutes" scope="settings">Inactive minutes (since last steps)</string>
     <string id="settings_inactive_active_minutes" scope="settings">Inactive / active minutes (current or last walk)</string>
     <string id="settings_above_clock_lines" scope="settings">Lines above clock</string>
     <string id="settings_reminders" scope="settings">Stand-up reminders</string>
     <string id="settings_remind_window" scope="settings">Remind after inactive</string>
     <string id="settings_remind_repeat" scope="settings">Repeat reminder every</string>
-    <string id="settings_move_threshold" scope="settings">Steps that count as moving</string>
-    <string id="settings_hr_margin" scope="settings">Heart rate above resting that counts as moving</string>
+    <string id="settings_move_threshold" scope="settings">Steps in 2 min that count as on feet</string>
     <string id="settings_two_small_lines" scope="settings">Two small lines</string>
     <string id="settings_one_large_line" scope="settings">One large line (shows line 1)</string>
     <string id="settings_alternative_timezone_1" scope="settings">Alternative Timezone 1</string>

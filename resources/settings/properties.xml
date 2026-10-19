@@ -32,7 +32,6 @@
     <property id="remindWindowMin" type="number">30</property>
     <property id="remindRepeatMin" type="number">5</property>
     <property id="moveThreshold" type="number">10</property>
-    <property id="hrMargin" type="number">30</property>
     <property id="fieldLayout" type="number">0</property>
     <property id="leftValueShows" type="number">6</property>
     <property id="middleValueShows" type="number">10</property>
